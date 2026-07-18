@@ -39,7 +39,9 @@
     padding-top:max(20px, env(safe-area-inset-top));
     padding-bottom:max(20px, env(safe-area-inset-bottom));
     -webkit-text-size-adjust:100%;
+    font-size:14px;
   }
+  .sub, .footer-note, .muted{font-size:12px;}
   .headline{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:1px;}
   .wrap{max-width:960px;margin:0 auto; width:100%;}
 
@@ -182,7 +184,7 @@
   .hist-del:hover{background:var(--red); color:var(--white); border-color:var(--red);}
   .footer-note{font-size:11px; color:var(--gray); text-align:center; margin-top:20px; line-height:1.6;}
   .reset-link{color:var(--gray); text-decoration:underline; cursor:pointer; font-size:11px;}
-  .install-tip{display:none; background:#102a31; border:1px solid var(--teal); padding:10px 12px; margin-bottom:12px; font-size:12px; line-height:1.45;}
+  .install-tip{display:none!important; background:#102a31; border:1px solid var(--teal); padding:10px 12px; margin-bottom:12px; font-size:12px; line-height:1.45;}
   .install-tip b{color:var(--teal);}
   .data-tools{display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin-top:9px;}
   .data-tools button{padding:6px 10px; font-size:10px; clip-path:none;}
@@ -196,9 +198,12 @@
   .history-toggle{margin-left:auto; padding:5px 9px; min-height:30px; font-size:10px; clip-path:none; color:var(--teal); border-color:var(--teal);}
   .history-drawer{display:none;}
   .history-drawer.open{display:block;}
-  .tracker-actions{display:flex; justify-content:flex-end; margin:-4px 0 10px;}
+  .tracker-actions{display:none;}
   .tracker-actions .history-toggle{margin:0; min-height:38px; font-size:11px;}
   body.compact-screen .install-tip, body.compact-screen .topbar, body.compact-screen .playerrow, body.compact-screen .wrap > .card{display:none;}
+  .history-global{position:fixed; z-index:70; top:max(12px, env(safe-area-inset-top)); right:14px; min-height:38px; padding:7px 11px; clip-path:none; color:var(--teal); border-color:var(--teal); background:var(--panel); box-shadow:0 4px 16px #0008;}
+  body:not(.compact-screen) .history-global{top:112px;}
+  .history-drawer.open{position:fixed; z-index:60; top:max(60px, calc(env(safe-area-inset-top) + 52px)); bottom:82px; left:10px; right:10px; max-width:700px; margin:0 auto; overflow:auto; box-shadow:0 14px 45px #000b;}
   body{padding-bottom:max(96px, calc(env(safe-area-inset-bottom) + 84px));}
 
   .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; max-height:520px; overflow-y:auto; }
@@ -388,6 +393,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<button class="history-global" id="globalHistoryButton" type="button" aria-expanded="false">HISTORY</button>
 <nav class="bottom-nav" aria-label="Main navigation">
   <button class="nav-btn active" data-panel="home"><span class="nav-icon">⌂</span>HOME</button>
   <button class="nav-btn" data-panel="log"><span class="nav-icon">＋</span>LOG</button>
@@ -880,15 +886,19 @@ function showPanel(name){
   window.scrollTo({top:0, behavior:'smooth'});
 }
 document.querySelectorAll('.nav-btn').forEach(btn=>btn.onclick=()=>showPanel(btn.dataset.panel));
-const historyButton = document.getElementById('historyToggle');
+const historyDrawer = document.getElementById('historyDrawer');
+document.body.appendChild(historyDrawer);
+const historyButton = document.getElementById('globalHistoryButton');
 historyButton.className = 'history-toggle'; historyButton.type = 'button'; historyButton.innerHTML = '🕒 HISTORY';
 historyButton.setAttribute('aria-expanded','false');
-document.getElementById('trackerTitle').appendChild(historyButton);
+historyButton.classList.add('history-global');
 historyButton.onclick = ()=>{
   const drawer = document.getElementById('historyDrawer');
   const open = drawer.classList.toggle('open');
   historyButton.setAttribute('aria-expanded', String(open));
+  historyButton.textContent = open ? 'CLOSE HISTORY' : 'HISTORY';
   historyButton.innerHTML = open ? '✕ CLOSE HISTORY' : '🕒 HISTORY';
+  historyButton.textContent = open ? 'CLOSE HISTORY' : 'HISTORY';
 };
 loadTimer();
 loadState();
