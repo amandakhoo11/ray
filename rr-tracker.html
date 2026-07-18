@@ -196,6 +196,9 @@
   .history-toggle{margin-left:auto; padding:5px 9px; min-height:30px; font-size:10px; clip-path:none; color:var(--teal); border-color:var(--teal);}
   .history-drawer{display:none;}
   .history-drawer.open{display:block;}
+  .tracker-actions{display:flex; justify-content:flex-end; margin:-4px 0 10px;}
+  .tracker-actions .history-toggle{margin:0; min-height:38px; font-size:11px;}
+  body.compact-screen .install-tip, body.compact-screen .topbar, body.compact-screen .playerrow, body.compact-screen .wrap > .card{display:none;}
   body{padding-bottom:max(96px, calc(env(safe-area-inset-bottom) + 84px));}
 
   .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; max-height:520px; overflow-y:auto; }
@@ -358,6 +361,7 @@
   <!-- MISSION TRACKER -->
   <div class="card">
     <h2 id="trackerTitle">📊 MISSION TRACKER</h2>
+    <div class="tracker-actions"><button class="history-toggle" id="historyToggle" type="button" aria-expanded="false">HISTORY</button></div>
     <div class="range-controls">
       <button class="range-btn active" data-range="7">7 DAYS</button>
       <button class="range-btn" data-range="30">30 DAYS</button>
@@ -872,10 +876,11 @@ const panels = {home:'homePanel', log:'logPanel', redeem:'redeemPanel', tracker:
 function showPanel(name){
   Object.entries(panels).forEach(([key, id])=>document.getElementById(id).classList.toggle('active', key===name));
   document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.toggle('active', btn.dataset.panel===name));
+  document.body.classList.toggle('compact-screen', name !== 'home');
   window.scrollTo({top:0, behavior:'smooth'});
 }
 document.querySelectorAll('.nav-btn').forEach(btn=>btn.onclick=()=>showPanel(btn.dataset.panel));
-const historyButton = document.createElement('button');
+const historyButton = document.getElementById('historyToggle');
 historyButton.className = 'history-toggle'; historyButton.type = 'button'; historyButton.innerHTML = '🕒 HISTORY';
 historyButton.setAttribute('aria-expanded','false');
 document.getElementById('trackerTitle').appendChild(historyButton);
