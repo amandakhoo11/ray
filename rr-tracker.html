@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0F1923">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Scholar">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.svg">
 <title>VALORANT SCHOLAR // COMPETITIVE STUDY TRACKER</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
@@ -30,6 +36,8 @@
     font-family:'Rajdhani',sans-serif;
     min-height:100vh;
     padding:20px;
+    padding-top:max(20px, env(safe-area-inset-top));
+    padding-bottom:max(20px, env(safe-area-inset-bottom));
     -webkit-text-size-adjust:100%;
   }
   .headline{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:1px;}
@@ -174,6 +182,10 @@
   .hist-del:hover{background:var(--red); color:var(--white); border-color:var(--red);}
   .footer-note{font-size:11px; color:var(--gray); text-align:center; margin-top:20px; line-height:1.6;}
   .reset-link{color:var(--gray); text-decoration:underline; cursor:pointer; font-size:11px;}
+  .install-tip{display:none; background:#102a31; border:1px solid var(--teal); padding:10px 12px; margin-bottom:12px; font-size:12px; line-height:1.45;}
+  .install-tip b{color:var(--teal);}
+  .data-tools{display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin-top:9px;}
+  .data-tools button{padding:6px 10px; font-size:10px; clip-path:none;}
 
   .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; max-height:520px; overflow-y:auto; }
   table{min-width:620px;}
@@ -202,7 +214,7 @@
     .fund .amt{font-size:23px;}
     .fund .lbl{ font-size:11px; }
     .playerrow{ gap:8px; font-size:14px; }
-    .playerrow input{ flex:1 1 100%; font-size:15px; }
+    .playerrow input{ flex:1 1 100%; font-size:16px; min-height:42px; }
     .playerrow span{ font-size:13px !important; }
     .card{ padding:14px 14px; margin-bottom:12px; }
     .card h2{ font-size:14px; }
@@ -238,6 +250,7 @@
 </head>
 <body>
 <div class="wrap">
+  <div class="install-tip" id="installTip"><b>INSTALL ON IPHONE:</b> In Safari, tap Share, then <i>Add to Home Screen</i>. Your progress stays on this phone. Tap this note to hide it.</div>
 
   <div class="topbar">
     <div>
@@ -343,6 +356,7 @@
   <div class="footer-note">
     Your progress is saved automatically to this device.
     <br><span class="reset-link" id="resetAll">Reset all data</span>
+    <div class="data-tools"><button id="exportData">Export backup</button><button id="importData">Import backup</button><input id="importFile" type="file" accept="application/json" hidden></div>
   </div>
 </div>
 
@@ -420,8 +434,9 @@ let timer = { remaining:25*60, running:false, interval:null };
 
 function todayKey(offset=0){
   const d = new Date();
+  d.setHours(12,0,0,0);
   d.setDate(d.getDate()-offset);
-  return d.toISOString().slice(0,10);
+  return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-');
 }
 function ensureDay(key){
   if(!state.log[key]) state.log[key] = {focus:0, homework:0, assist:0, defense:0, penaltyRR:0};
@@ -726,15 +741,28 @@ function formatTime(s){
 function updateTimerDisplay(){
   document.getElementById('timerDisplay').textContent = formatTime(timer.remaining);
 }
+function saveTimer(){
+  try{ localStorage.setItem('scholar-timer-v1', JSON.stringify({remaining:timer.remaining, running:timer.running, savedAt:Date.now()})); }catch(e){}
+}
+function loadTimer(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('scholar-timer-v1'));
+    if(!saved) return;
+    timer.remaining = saved.running ? Math.max(0, saved.remaining - Math.floor((Date.now()-saved.savedAt)/1000)) : saved.remaining;
+    if(timer.remaining === 0) timer.remaining = 25*60;
+  }catch(e){}
+}
 function startTimer(){
   if(timer.running) return;
   timer.running = true;
   document.getElementById('startBtn').disabled = true;
   document.getElementById('pauseBtn').disabled = false;
   document.getElementById('timerStatus').textContent = 'ROUND IN PROGRESS';
+  saveTimer();
   timer.interval = setInterval(()=>{
     timer.remaining--;
     updateTimerDisplay();
+    if(timer.remaining % 10 === 0) saveTimer();
     if(timer.remaining<=0){
       clearInterval(timer.interval);
       timer.running = false;
@@ -754,6 +782,7 @@ function pauseTimer(){
   document.getElementById('startBtn').disabled = false;
   document.getElementById('pauseBtn').disabled = true;
   document.getElementById('timerStatus').textContent = 'PAUSED';
+  saveTimer();
 }
 function resetTimer(silent){
   clearInterval(timer.interval);
@@ -763,6 +792,7 @@ function resetTimer(silent){
   document.getElementById('pauseBtn').disabled = true;
   document.getElementById('timerStatus').textContent = silent ? 'STANDBY' : 'RESET — TIMER CLEARED';
   updateTimerDisplay();
+  saveTimer();
 }
 
 document.getElementById('startBtn').onclick = startTimer;
@@ -779,10 +809,29 @@ document.getElementById('manualFocusBtn').onclick = ()=>{
   addRR(rr, 'focus', 'Focus Block (Manual Log)' + (streakBonus ? ' (Streak Bonus)' : ''));
   showToast('PAST FOCUS BLOCK LOGGED · +' + rr + ' RR' + (streakBonus ? ' (STREAK BONUS)' : ''));
 };
-document.getElementById('playerName').addEventListener('change', e=>{
+document.getElementById('playerName').addEventListener('input', e=>{
   state.playerName = e.target.value;
   saveState();
 });
+document.getElementById('exportData').onclick = ()=>{
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([JSON.stringify({version:1, exportedAt:new Date().toISOString(), state}, null, 2)], {type:'application/json'}));
+  link.download = 'scholar-protocol-backup.json'; link.click();
+  setTimeout(()=>URL.revokeObjectURL(link.href), 1000); showToast('BACKUP EXPORTED');
+};
+document.getElementById('importData').onclick = ()=>document.getElementById('importFile').click();
+document.getElementById('importFile').onchange = async event=>{
+  const file = event.target.files[0]; if(!file) return;
+  try{
+    const backup = JSON.parse(await file.text());
+    if(!backup.state || typeof backup.state !== 'object') throw new Error('Invalid backup');
+    if(confirm('Replace current phone data with this backup?')){
+      state = Object.assign({playerName:'', lifetimeRR:0, spendableRR:0, monitorFund:0, todayFocusCount:0, streakDays:0, log:{}, transactions:[]}, backup.state);
+      await saveState(); render(); showToast('BACKUP RESTORED');
+    }
+  }catch(e){ alert('That backup file could not be read.'); }
+  event.target.value = '';
+};
 document.getElementById('resetAll').onclick = async ()=>{
   if(!confirm('Reset all saved progress? This cannot be undone.')) return;
   state = {playerName:'', lifetimeRR:0, spendableRR:0, monitorFund:0, todayFocusCount:0, streakDays:0, log:{}, transactions:[]};
@@ -790,8 +839,15 @@ document.getElementById('resetAll').onclick = async ()=>{
   render();
 };
 
+loadTimer();
 loadState();
 updateTimerDisplay();
+if(!localStorage.getItem('scholar-install-tip-hidden')){
+  const tip = document.getElementById('installTip'); tip.style.display = 'block';
+  tip.onclick = ()=>{ tip.style.display='none'; localStorage.setItem('scholar-install-tip-hidden','1'); };
+}
+if('serviceWorker' in navigator) window.addEventListener('load', ()=>navigator.serviceWorker.register('./service-worker.js'));
+window.addEventListener('pagehide', ()=>{ saveTimer(); saveState(); });
 </script>
 </body>
 </html>
