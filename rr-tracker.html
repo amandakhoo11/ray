@@ -186,6 +186,17 @@
   .install-tip b{color:var(--teal);}
   .data-tools{display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin-top:9px;}
   .data-tools button{padding:6px 10px; font-size:10px; clip-path:none;}
+  .app-panel{display:none;}
+  .app-panel.active{display:block; animation:panelIn .18s ease-out;}
+  @keyframes panelIn{from{opacity:.35;transform:translateY(5px)}to{opacity:1;transform:none}}
+  .bottom-nav{position:fixed; z-index:40; left:50%; bottom:max(10px, env(safe-area-inset-bottom)); transform:translateX(-50%); width:min(720px,calc(100% - 20px)); display:grid; grid-template-columns:repeat(4,1fr); gap:4px; padding:7px; background:rgba(17,28,38,.96); border:1px solid var(--line); box-shadow:0 10px 35px #0008; backdrop-filter:blur(12px);}
+  .nav-btn{clip-path:none; min-height:50px; padding:6px 4px; font-size:11px; color:var(--gray); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;}
+  .nav-btn .nav-icon{font-size:17px; line-height:1;}
+  .nav-btn.active{color:var(--white); background:var(--red); border-color:var(--red);}
+  .history-toggle{margin-left:auto; padding:5px 9px; min-height:30px; font-size:10px; clip-path:none; color:var(--teal); border-color:var(--teal);}
+  .history-drawer{display:none;}
+  .history-drawer.open{display:block;}
+  body{padding-bottom:max(96px, calc(env(safe-area-inset-bottom) + 84px));}
 
   .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; max-height:520px; overflow-y:auto; }
   table{min-width:620px;}
@@ -287,6 +298,7 @@
     </div>
   </div>
 
+  <section class="app-panel active" id="homePanel">
   <!-- TIMER -->
   <div class="card timer-card">
     <h2 style="justify-content:center">🎯 FOCUS BLOCK — ROUND WIN (25 MIN)</h2>
@@ -309,6 +321,9 @@
     </div>
   </div>
 
+  </section>
+
+  <section class="app-panel" id="logPanel">
   <!-- QUICK ACTIONS -->
   <div class="card">
     <h2>✅ ACTIVE DUTY PLAYBOOK</h2>
@@ -321,14 +336,20 @@
     <div class="grid" id="penaltyGrid"></div>
   </div>
 
+  </section>
+
+  <section class="app-panel" id="redeemPanel">
   <!-- BUY MENU -->
   <div class="card">
     <h2>🛒 BUY MENU</h2>
     <div class="grid" id="buyGrid"></div>
   </div>
 
+  </section>
+
+  <section class="app-panel" id="trackerPanel">
   <!-- HISTORY -->
-  <div class="card">
+  <div class="card history-drawer" id="historyDrawer">
     <h2>🕒 RR TRANSACTION HISTORY</h2>
     <div id="historyEmpty" style="font-size:12px;color:var(--gray);">No transactions logged yet.</div>
     <div id="historyList"></div>
@@ -353,6 +374,8 @@
     </div>
   </div>
 
+  </section>
+
   <div class="footer-note">
     Your progress is saved automatically to this device.
     <br><span class="reset-link" id="resetAll">Reset all data</span>
@@ -361,6 +384,12 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<nav class="bottom-nav" aria-label="Main navigation">
+  <button class="nav-btn active" data-panel="home"><span class="nav-icon">⌂</span>HOME</button>
+  <button class="nav-btn" data-panel="log"><span class="nav-icon">＋</span>LOG</button>
+  <button class="nav-btn" data-panel="redeem"><span class="nav-icon">◇</span>REDEEM</button>
+  <button class="nav-btn" data-panel="tracker"><span class="nav-icon">▥</span>TRACKER</button>
+</nav>
 
 <script>
 const STORAGE_KEY = 'scholar-state-v1';
@@ -839,6 +868,23 @@ document.getElementById('resetAll').onclick = async ()=>{
   render();
 };
 
+const panels = {home:'homePanel', log:'logPanel', redeem:'redeemPanel', tracker:'trackerPanel'};
+function showPanel(name){
+  Object.entries(panels).forEach(([key, id])=>document.getElementById(id).classList.toggle('active', key===name));
+  document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.toggle('active', btn.dataset.panel===name));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.querySelectorAll('.nav-btn').forEach(btn=>btn.onclick=()=>showPanel(btn.dataset.panel));
+const historyButton = document.createElement('button');
+historyButton.className = 'history-toggle'; historyButton.type = 'button'; historyButton.innerHTML = '🕒 HISTORY';
+historyButton.setAttribute('aria-expanded','false');
+document.getElementById('trackerTitle').appendChild(historyButton);
+historyButton.onclick = ()=>{
+  const drawer = document.getElementById('historyDrawer');
+  const open = drawer.classList.toggle('open');
+  historyButton.setAttribute('aria-expanded', String(open));
+  historyButton.innerHTML = open ? '✕ CLOSE HISTORY' : '🕒 HISTORY';
+};
 loadTimer();
 loadState();
 updateTimerDisplay();
