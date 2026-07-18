@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>VALORANT SCHOLAR // COMPETITIVE STUDY TRACKER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1923;
+    --panel:#111c26;
+    --panel2:#16232f;
+    --line:#22303c;
+    --red:#FF4655;
+    --red-dim:#7d2530;
+    --teal:#00E5C7;
+    --gold:#F4C750;
+    --white:#ECE8E1;
+    --gray:#7c8891;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 10% 0%, #16232f 0%, transparent 40%),
+      radial-gradient(circle at 90% 10%, #1a1220 0%, transparent 45%),
+      var(--ink);
+    color:var(--white);
+    font-family:'Rajdhani',sans-serif;
+    min-height:100vh;
+    padding:20px;
+    -webkit-text-size-adjust:100%;
+  }
+  .headline{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:1px;}
+  .wrap{max-width:960px;margin:0 auto; width:100%;}
+
+  /* ---- TOP BAR ---- */
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    background:linear-gradient(90deg, var(--red-dim), transparent);
+    border-left:4px solid var(--red);
+    padding:14px 20px;
+    margin-bottom:16px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  }
+  .topbar h1{margin:0; font-size:22px; letter-spacing:2px;}
+  .topbar .sub{font-size:12px; color:var(--gray); letter-spacing:2px;}
+  .fund{
+    text-align:right;
+  }
+  .fund .amt{font-family:'Oswald'; font-size:26px; color:var(--teal); font-weight:600;}
+  .fund .lbl{font-size:11px; color:var(--gray); letter-spacing:2px;}
+
+  /* player row */
+  .playerrow{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    margin-bottom:18px; font-size:14px;
+  }
+  .playerrow input{
+    background:var(--panel2); border:1px solid var(--line); color:var(--white);
+    padding:7px 10px; font-family:'Rajdhani'; font-weight:600; font-size:14px;
+  }
+  .rankchip{
+    font-family:'Oswald'; font-size:13px; letter-spacing:1px; padding:5px 14px;
+    background:var(--panel2); border:1px solid var(--gold); color:var(--gold);
+    clip-path: polygon(8px 0,100% 0,100% 100%,0 100%,0 8px);
+  }
+
+  /* ---- RANK LADDER ---- */
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:16px 18px;
+    margin-bottom:16px;
+    position:relative;
+  }
+  .card::before{
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--red);
+  }
+  .card h2{
+    margin:0 0 10px 0; font-size:15px; letter-spacing:2px; color:var(--red);
+    display:flex; align-items:center; gap:8px;
+  }
+  .ladder{
+    display:flex; height:22px; border:1px solid var(--line); overflow:hidden;
+  }
+  .ladder div{
+    flex:1; display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-family:'Oswald'; letter-spacing:1px; color:#0008;
+    border-right:1px solid var(--ink);
+  }
+  .seg-iron{background:#5b6570;} .seg-bronze{background:#8a5a3c;}
+  .seg-silver{background:#9fb0bb;} .seg-gold{background:var(--gold);}
+  .seg-radiant{background:linear-gradient(90deg,#ff4655,#f4c750);}
+  .ladder-meta{display:flex; justify-content:space-between; font-size:11px; color:var(--gray); margin-top:6px;}
+  .rr-track{
+    height:10px; background:var(--panel2); border:1px solid var(--line); margin-top:10px; position:relative;
+  }
+  .rr-fill{
+    height:100%; background:linear-gradient(90deg,var(--red),var(--gold)); transition:width .4s;
+  }
+
+  /* ---- TIMER ---- */
+  .timer-card{ text-align:center; }
+  .timer-display{
+    font-family:'Oswald'; font-size:56px; font-weight:600; letter-spacing:3px;
+    color:var(--white); margin:8px 0;
+  }
+  .timer-status{font-size:12px; letter-spacing:2px; color:var(--gray); text-transform:uppercase;}
+  .btnrow{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px;}
+  button{
+    font-family:'Oswald'; text-transform:uppercase; letter-spacing:1px;
+    background:var(--panel2); color:var(--white); border:1px solid var(--line);
+    padding:10px 16px; cursor:pointer; font-size:13px;
+    clip-path: polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+    transition:all .15s;
+  }
+  button:hover:not(:disabled){background:var(--red-dim); border-color:var(--red);}
+  button:disabled{opacity:.35; cursor:not-allowed;}
+  button.primary{background:var(--red); border-color:var(--red);}
+  button.primary:hover{background:#ff5d69;}
+  button.ghost{background:transparent;}
+
+  /* ---- ACTION GRID ---- */
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px;}
+  .action{
+    background:var(--panel2); border:1px solid var(--line); padding:12px;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .action .name{font-family:'Oswald'; font-size:13px; letter-spacing:1px;}
+  .action .desc{font-size:11px; color:var(--gray); line-height:1.4; min-height:44px;}
+  .action .rr{font-family:'Oswald'; font-size:13px;}
+  .rr.pos{color:var(--teal);} .rr.neg{color:var(--red);}
+
+  /* ---- BUY MENU ---- */
+  .buy{
+    background:var(--panel2); border:1px solid var(--line); padding:12px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .buy .cost{font-family:'Oswald'; color:var(--gold); font-size:15px;}
+  .buy .desc{font-size:12px; color:var(--gray);}
+
+  /* ---- WEEKLY LOG ---- */
+  table{width:100%; border-collapse:collapse; font-size:12px; margin-top:8px;}
+  th,td{border:1px solid var(--line); padding:6px 8px; text-align:center;}
+  th{background:var(--panel2); font-family:'Oswald'; letter-spacing:1px; font-size:11px; color:var(--gray);}
+  td.day{font-family:'Oswald'; color:var(--red); text-align:left;}
+  .net-pos{color:var(--teal);} .net-neg{color:var(--red);}
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--panel); border:1px solid var(--red); padding:10px 20px;
+    font-family:'Oswald'; letter-spacing:1px; font-size:13px;
+    opacity:0; pointer-events:none; transition:opacity .3s, transform .3s;
+    z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+
+  .hist-row{
+    display:flex; align-items:center; gap:10px; justify-content:space-between;
+    padding:8px 10px; border-bottom:1px solid var(--line); font-size:12px;
+  }
+  .hist-row:last-child{border-bottom:none;}
+  .hist-left{display:flex; flex-direction:column; gap:2px;}
+  .hist-label{font-family:'Oswald'; letter-spacing:.5px; font-size:12px;}
+  .hist-time{font-size:10px; color:var(--gray);}
+  .hist-right{display:flex; align-items:center; gap:10px;}
+  .hist-amt{font-family:'Oswald'; font-size:13px; min-width:56px; text-align:right;}
+  .hist-del{
+    background:transparent; border:1px solid var(--red-dim); color:var(--red);
+    padding:4px 9px; font-size:11px; clip-path:none; letter-spacing:1px;
+  }
+  .hist-del:hover{background:var(--red); color:var(--white); border-color:var(--red);}
+  .footer-note{font-size:11px; color:var(--gray); text-align:center; margin-top:20px; line-height:1.6;}
+  .reset-link{color:var(--gray); text-decoration:underline; cursor:pointer; font-size:11px;}
+
+  .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; max-height:520px; overflow-y:auto; }
+  table{min-width:620px;}
+  thead th{ position:sticky; top:0; background:var(--panel2); z-index:1; }
+
+  .range-controls{ display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+  .range-btn{
+    font-size:12px; padding:7px 14px; background:var(--panel2); border:1px solid var(--line);
+  }
+  .range-btn.active{ background:var(--red); border-color:var(--red); color:var(--white); }
+  .period-total{
+    font-size:13px; color:var(--gray); margin-bottom:10px;
+  }
+  .period-total b{ font-family:'Oswald'; color:var(--teal); letter-spacing:1px; }
+
+  /* ---- MOBILE ---- */
+  @media (max-width: 640px){
+    body{ padding:10px; font-size:15px; }
+    .topbar{
+      flex-direction:column; align-items:flex-start; gap:10px;
+      padding:12px 14px;
+    }
+    .topbar h1{font-size:19px; letter-spacing:1px;}
+    .topbar .sub{ font-size:12px; }
+    .fund{ text-align:left; align-self:stretch; }
+    .fund .amt{font-size:23px;}
+    .fund .lbl{ font-size:11px; }
+    .playerrow{ gap:8px; font-size:14px; }
+    .playerrow input{ flex:1 1 100%; font-size:15px; }
+    .playerrow span{ font-size:13px !important; }
+    .card{ padding:14px 14px; margin-bottom:12px; }
+    .card h2{ font-size:14px; }
+    .timer-display{ font-size:42px; letter-spacing:1px; }
+    .timer-status{ font-size:13px; }
+    .btnrow{ gap:8px; }
+    .btnrow button{ flex:1 1 calc(50% - 8px); font-size:13px; padding:11px 8px; }
+    .grid{ grid-template-columns:1fr; }
+    .action .name{ font-size:14px; }
+    .action .desc{ min-height:0; font-size:12.5px; }
+    .action .rr{ font-size:14px; }
+    .buy .desc{ font-size:12.5px; }
+    .ladder div{ font-size:9px; letter-spacing:0; }
+    .ladder-meta{ font-size:12px; }
+    .hist-row{ flex-direction:column; align-items:flex-start; gap:8px; }
+    .hist-right{ width:100%; justify-content:space-between; }
+    .hist-label{ font-size:13px; }
+    .hist-time{ font-size:11px; }
+    .hist-amt{ font-size:14px; }
+    button{ touch-action:manipulation; }
+    .rankchip{ font-size:12px; padding:6px 12px; }
+    table{ font-size:13px; }
+    th{ font-size:11.5px; }
+    .range-btn{ font-size:13px; padding:9px 14px; flex:1 1 auto; }
+    .period-total{ font-size:13px; }
+    .footer-note{ font-size:12px; }
+  }
+  @media (max-width: 380px){
+    .timer-display{ font-size:36px; }
+    .topbar h1{ font-size:17px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div>
+      <h1>⚡ SCHOLAR PROTOCOL</h1>
+      <div class="sub">RANKED STUDY OPS · SEASON 1</div>
+    </div>
+    <div class="fund">
+      <div class="amt" id="fundAmt">RM 0.00</div>
+      <div class="lbl">MONITOR FUND</div>
+    </div>
+  </div>
+
+  <div class="playerrow">
+    <input id="playerName" placeholder="Player Name" value="">
+    <span class="rankchip" id="rankChip">IRON SCHOLAR</span>
+    <span style="font-size:12px;color:var(--gray)">Spendable RR: <b id="spendableDisplay" style="color:var(--teal)">0</b></span>
+    <span style="font-size:12px;color:var(--gray)">Lifetime RR: <b id="lifetimeDisplay" style="color:var(--gold)">0</b></span>
+  </div>
+
+  <!-- RANK LADDER -->
+  <div class="card">
+    <h2>🏆 COMPETITIVE LADDER</h2>
+    <div class="ladder">
+      <div class="seg-iron">IRON</div>
+      <div class="seg-bronze">BRONZE</div>
+      <div class="seg-silver">SILVER</div>
+      <div class="seg-gold">GOLD</div>
+      <div class="seg-radiant">RADIANT</div>
+    </div>
+    <div class="rr-track"><div class="rr-fill" id="rrFill" style="width:0%"></div></div>
+    <div class="ladder-meta">
+      <span id="rankNowText">Iron Scholar</span>
+      <span id="rankNextText">200 RR to Bronze</span>
+    </div>
+  </div>
+
+  <!-- TIMER -->
+  <div class="card timer-card">
+    <h2 style="justify-content:center">🎯 FOCUS BLOCK — ROUND WIN (25 MIN)</h2>
+    <div class="timer-display" id="timerDisplay">25:00</div>
+    <div class="timer-status" id="timerStatus">STANDBY</div>
+    <div class="btnrow">
+      <button class="primary" id="startBtn">START ROUND</button>
+      <button id="pauseBtn" disabled>PAUSE</button>
+      <button class="ghost" id="resetBtn">RESET</button>
+      <button id="afkBtn" style="border-color:var(--red);color:var(--red)">⚠ WENT AFK (-10 RR)</button>
+    </div>
+    <div class="btnrow" style="margin-top:8px;">
+      <button id="manualFocusBtn" style="border-color:var(--teal);color:var(--teal)">+ LOG PAST FOCUS BLOCK</button>
+    </div>
+    <div style="font-size:11px;color:var(--gray);margin-top:4px;">
+      Already did a 25-min block earlier (or offline)? Log it here without running the timer.
+    </div>
+    <div style="font-size:11px;color:var(--gray);margin-top:10px;">
+      Streak: <b id="streakText" style="color:var(--gold)">0</b> focus blocks today · <span id="streakDaysText">0-day streak</span>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="card">
+    <h2>✅ ACTIVE DUTY PLAYBOOK</h2>
+    <div class="grid" id="actionGrid"></div>
+  </div>
+
+  <!-- PENALTIES -->
+  <div class="card">
+    <h2 style="color:var(--red)">⚠ PENALTIES & BANS</h2>
+    <div class="grid" id="penaltyGrid"></div>
+  </div>
+
+  <!-- BUY MENU -->
+  <div class="card">
+    <h2>🛒 BUY MENU</h2>
+    <div class="grid" id="buyGrid"></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="card">
+    <h2>🕒 RR TRANSACTION HISTORY</h2>
+    <div id="historyEmpty" style="font-size:12px;color:var(--gray);">No transactions logged yet.</div>
+    <div id="historyList"></div>
+  </div>
+
+  <!-- MISSION TRACKER -->
+  <div class="card">
+    <h2 id="trackerTitle">📊 MISSION TRACKER</h2>
+    <div class="range-controls">
+      <button class="range-btn active" data-range="7">7 DAYS</button>
+      <button class="range-btn" data-range="30">30 DAYS</button>
+      <button class="range-btn" data-range="90">3 MONTHS</button>
+    </div>
+    <div class="period-total" id="periodTotal">Period Total: <b>+0 RR</b></div>
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th class="day">DAY</th><th>Focus Blocks</th><th>Homework</th><th>Concept Defense</th><th>Assist</th><th>Penalties</th><th>Net RR</th></tr>
+      </thead>
+      <tbody id="weekBody"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Your progress is saved automatically to this device.
+    <br><span class="reset-link" id="resetAll">Reset all data</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'scholar-state-v1';
+const DAY_NAMES = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const hasCloudStorage = (typeof window.storage !== 'undefined') && !!window.storage;
+
+async function storageGet(key){
+  if(hasCloudStorage){
+    try{ return await window.storage.get(key, false); }
+    catch(e){ return null; }
+  }
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? {value: raw} : null;
+  }catch(e){ return null; }
+}
+async function storageSet(key, value){
+  if(hasCloudStorage){
+    try{ return await window.storage.set(key, value, false); }
+    catch(e){ console.error('cloud save failed', e); return null; }
+  }
+  try{
+    localStorage.setItem(key, value);
+    return {value};
+  }catch(e){ console.error('localStorage save failed', e); return null; }
+}
+
+const RANKS = [
+  {name:'Iron Scholar', min:0, max:199, cls:'seg-iron'},
+  {name:'Bronze Scholar', min:200, max:499, cls:'seg-bronze'},
+  {name:'Silver Scholar', min:500, max:899, cls:'seg-silver'},
+  {name:'Gold Scholar', min:900, max:1499, cls:'seg-gold'},
+  {name:'Radiant Scholar', min:1500, max:Infinity, cls:'seg-radiant'},
+];
+
+const ACTIONS = [
+  {id:'homework', name:'Clean Homework Clear', desc:'Neat handwriting, clear effort, zero rushed shortcuts.', rr:15},
+  {id:'defense', name:'Concept Defense', desc:'Explain the homework concept in under 60s, no notes.', rr:5},
+  {id:'assist', name:'Household Assist', desc:'Helped Mom with household prep.', rr:10},
+];
+
+const PENALTIES = [
+  {id:'drift', name:'Distraction Drift', desc:'Phone / gaming tabs / left cushion early.', rr:-10, resetsTimer:true},
+  {id:'rush', name:'Sloppy Rushing', desc:'Illegible rushed worksheet — must redo.', rr:-15},
+  {id:'attitude', name:'Attitude / Pushback', desc:'Whining or arguing about starting sessions.', rr:-10, note:'Pool table locked tonight.'},
+];
+
+const BUYS = [
+  {id:'eco', name:'Eco Buy', cost:50, desc:'30 min extra weekend gaming, or first pool table pick.'},
+  {id:'half', name:'Half-Buy', cost:150, desc:'Weekend cheat-meal choice, or skip one chore.'},
+  {id:'full', name:'Full Buy', cost:600, desc:'Custom keycaps/switches or mid-tier gaming accessory.'},
+  {id:'operator', name:'THE OPERATOR', cost:1200, desc:'Desktop Monitor Savings Transfer — cash out to fund.'},
+];
+
+let state = {
+  playerName:'',
+  lifetimeRR:0,
+  spendableRR:0,
+  monitorFund:0,
+  todayFocusCount:0,
+  streakDays:0,
+  log:{}, // dateKey -> {focus, homework, assist, penaltyRR}
+  transactions:[] // {id, ts, label, rr, kind, dayKey, field, cost, buyId}
+};
+
+function makeId(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+}
+
+let timer = { remaining:25*60, running:false, interval:null };
+
+function todayKey(offset=0){
+  const d = new Date();
+  d.setDate(d.getDate()-offset);
+  return d.toISOString().slice(0,10);
+}
+function ensureDay(key){
+  if(!state.log[key]) state.log[key] = {focus:0, homework:0, assist:0, defense:0, penaltyRR:0};
+  return state.log[key];
+}
+
+async function loadState(){
+  try{
+    const res = await storageGet('state');
+    if(res && res.value){
+      state = Object.assign(state, JSON.parse(res.value));
+    }
+  }catch(e){ /* no saved state yet */ }
+  render();
+}
+async function saveState(){
+  await storageSet('state', JSON.stringify(state));
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function getRank(rr){
+  return RANKS.find(r => rr>=r.min && rr<=r.max) || RANKS[RANKS.length-1];
+}
+
+function addRR(amount, dayField, label){
+  const lifetimeDelta = Math.max(amount,0);
+  state.lifetimeRR = Math.max(0, state.lifetimeRR + lifetimeDelta);
+  state.spendableRR += amount;
+  if(state.spendableRR < 0) state.spendableRR = 0;
+  const key = todayKey();
+  const day = ensureDay(key);
+  if(dayField === 'focus') day.focus = (day.focus||0) + 1;
+  else if(dayField === 'homework') day.homework = (day.homework||0) + 1;
+  else if(dayField === 'assist') day.assist = (day.assist||0) + 1;
+  else if(dayField === 'defense') day.defense = (day.defense||0) + 1;
+  else if(dayField === 'penalty') day.penaltyRR = (day.penaltyRR||0) + amount;
+
+  state.transactions.unshift({
+    id: makeId(),
+    ts: Date.now(),
+    label: label || (dayField || 'RR Change'),
+    rr: amount,
+    lifetimeDelta,
+    kind: amount >= 0 ? 'earn' : 'penalty',
+    dayKey: key,
+    field: dayField || null
+  });
+
+  saveState();
+  render();
+}
+
+function deleteTransaction(id){
+  const idx = state.transactions.findIndex(t => t.id === id);
+  if(idx === -1) return;
+  const tx = state.transactions[idx];
+
+  if(tx.kind === 'earn' || tx.kind === 'penalty'){
+    // undo RR effects
+    state.lifetimeRR = Math.max(0, state.lifetimeRR - (tx.lifetimeDelta || 0));
+    state.spendableRR = Math.max(0, state.spendableRR - tx.rr);
+    // undo day log effects
+    const day = state.log[tx.dayKey];
+    if(day){
+      if(tx.field === 'focus') day.focus = Math.max(0, day.focus - 1);
+      else if(tx.field === 'homework') day.homework = Math.max(0, day.homework - 1);
+      else if(tx.field === 'assist') day.assist = Math.max(0, day.assist - 1);
+      else if(tx.field === 'defense') day.defense = Math.max(0, day.defense - 1);
+      else if(tx.field === 'penalty') day.penaltyRR -= tx.rr;
+    }
+  } else if(tx.kind === 'redeem'){
+    // refund spendable RR
+    state.spendableRR += tx.cost;
+    if(tx.buyId === 'operator'){
+      state.monitorFund = Math.max(0, state.monitorFund - (tx.cost / 10));
+    }
+  }
+
+  state.transactions.splice(idx,1);
+  saveState();
+  render();
+  showToast('TRANSACTION DELETED · REVERSED');
+}
+
+function render(){
+  document.getElementById('playerName').value = state.playerName || '';
+  document.getElementById('fundAmt').textContent = 'RM ' + state.monitorFund.toFixed(2);
+  document.getElementById('spendableDisplay').textContent = state.spendableRR;
+  document.getElementById('lifetimeDisplay').textContent = state.lifetimeRR;
+
+  const rank = getRank(state.lifetimeRR);
+  document.getElementById('rankChip').textContent = rank.name.toUpperCase();
+  document.getElementById('rankNowText').textContent = rank.name;
+  const next = RANKS[RANKS.indexOf(rank)+1];
+  document.getElementById('rankNextText').textContent = next ? (next.min - state.lifetimeRR) + ' RR to ' + next.name.split(' ')[0] : 'Max Rank Reached';
+
+  const pct = Math.min(100, (state.lifetimeRR / 1500) * 100);
+  document.getElementById('rrFill').style.width = pct + '%';
+
+  const key = todayKey();
+  const day = state.log[key] || {focus:0};
+  document.getElementById('streakText').textContent = day.focus || 0;
+  document.getElementById('streakDaysText').textContent = state.streakDays + '-day streak';
+
+  renderActions();
+  renderPenalties();
+  renderBuys();
+  renderTracker();
+  renderHistory();
+}
+
+function timeAgoLabel(ts){
+  const d = new Date(ts);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  const timeStr = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  return sameDay ? 'Today ' + timeStr : d.toLocaleDateString() + ' ' + timeStr;
+}
+
+function renderHistory(){
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  list.innerHTML = '';
+  if(!state.transactions.length){
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  state.transactions.forEach(tx=>{
+    const row = document.createElement('div');
+    row.className = 'hist-row';
+    const amtClass = tx.rr >= 0 ? 'net-pos' : 'net-neg';
+    const amtText = (tx.rr >= 0 ? '+' : '') + tx.rr + ' RR';
+    row.innerHTML = `
+      <div class="hist-left">
+        <div class="hist-label">${tx.label}</div>
+        <div class="hist-time">${timeAgoLabel(tx.ts)}</div>
+      </div>
+      <div class="hist-right">
+        <div class="hist-amt ${amtClass}">${amtText}</div>
+      </div>
+    `;
+    const delBtn = document.createElement('button');
+    delBtn.className = 'hist-del';
+    delBtn.textContent = '✕ DELETE';
+    delBtn.onclick = ()=>{
+      if(confirm('Delete "' + tx.label + '" (' + amtText + ')? This reverses its RR effect.')){
+        deleteTransaction(tx.id);
+      }
+    };
+    row.querySelector('.hist-right').appendChild(delBtn);
+    list.appendChild(row);
+  });
+}
+
+function renderActions(){
+  const grid = document.getElementById('actionGrid');
+  grid.innerHTML = '';
+  ACTIONS.forEach(a=>{
+    const el = document.createElement('div');
+    el.className = 'action';
+    el.innerHTML = `<div class="name">${a.name}</div><div class="desc">${a.desc}</div><div class="rr pos">+${a.rr} RR</div>`;
+    const btn = document.createElement('button');
+    btn.textContent = 'LOG ACTION';
+    btn.onclick = ()=>{
+      const fieldMap = {homework:'homework', assist:'assist', defense:'defense'};
+      addRR(a.rr, fieldMap[a.id] || null, a.name);
+      showToast(a.name.toUpperCase() + ' · +' + a.rr + ' RR');
+    };
+    el.appendChild(btn);
+    grid.appendChild(el);
+  });
+}
+
+function renderPenalties(){
+  const grid = document.getElementById('penaltyGrid');
+  grid.innerHTML = '';
+  PENALTIES.forEach(p=>{
+    const el = document.createElement('div');
+    el.className = 'action';
+    el.innerHTML = `<div class="name">${p.name}</div><div class="desc">${p.desc}${p.note ? ' <b style="color:var(--red)">'+p.note+'</b>':''}</div><div class="rr neg">${p.rr} RR</div>`;
+    const btn = document.createElement('button');
+    btn.style.borderColor = 'var(--red)';
+    btn.textContent = 'LOG PENALTY';
+    btn.onclick = ()=>{
+      addRR(p.rr, 'penalty', p.name);
+      if(p.resetsTimer){ resetTimer(); }
+      showToast(p.name.toUpperCase() + ' · ' + p.rr + ' RR');
+    };
+    el.appendChild(btn);
+    grid.appendChild(el);
+  });
+}
+
+function renderBuys(){
+  const grid = document.getElementById('buyGrid');
+  grid.innerHTML = '';
+  BUYS.forEach(b=>{
+    const el = document.createElement('div');
+    el.className = 'buy';
+    el.innerHTML = `<div class="name" style="font-family:Oswald;font-size:13px;letter-spacing:1px">${b.name}</div><div class="desc">${b.desc}</div><div class="cost">${b.cost} RR</div>`;
+    const btn = document.createElement('button');
+    btn.textContent = 'REDEEM';
+    btn.disabled = state.spendableRR < b.cost;
+    btn.onclick = ()=>{
+      if(state.spendableRR < b.cost) return;
+      state.spendableRR -= b.cost;
+      if(b.id === 'operator'){
+        state.monitorFund += b.cost / 10;
+        showToast('OPERATOR PURCHASED · RM ' + (b.cost/10).toFixed(2) + ' → MONITOR FUND');
+      } else {
+        showToast(b.name.toUpperCase() + ' REDEEMED');
+      }
+      state.transactions.unshift({
+        id: makeId(),
+        ts: Date.now(),
+        label: b.name + ' (Redeemed)',
+        rr: -b.cost,
+        kind: 'redeem',
+        cost: b.cost,
+        buyId: b.id
+      });
+      saveState();
+      render();
+    };
+    el.appendChild(btn);
+    grid.appendChild(el);
+  });
+}
+
+let selectedRange = 7;
+
+function renderTracker(){
+  const body = document.getElementById('weekBody');
+  body.innerHTML = '';
+  let periodTotal = 0;
+
+  for(let i=selectedRange-1;i>=0;i--){
+    const key = todayKey(i);
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const day = state.log[key] || {focus:0,homework:0,assist:0,defense:0,penaltyRR:0};
+    const focus = day.focus || 0;
+    const homework = day.homework || 0;
+    const assist = day.assist || 0;
+    const defense = day.defense || 0;
+    const penaltyRR = day.penaltyRR || 0;
+    // Use actual awarded RR for the day (sums real transactions, so streak-bonus
+    // focus blocks are counted correctly rather than assuming a flat +10 each).
+    const net = state.transactions
+      .filter(t => t.dayKey === key)
+      .reduce((sum,t) => sum + t.rr, 0);
+    periodTotal += net;
+
+    const dateLabel = selectedRange > 7
+      ? (d.getMonth()+1) + '/' + d.getDate()
+      : DAY_NAMES[d.getDay()];
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="day">${dateLabel}${i===0 ? ' •' : ''}</td>
+      <td>${focus}</td>
+      <td>${homework}</td>
+      <td>${defense}</td>
+      <td>${assist}</td>
+      <td>${penaltyRR}</td>
+      <td class="${net>=0?'net-pos':'net-neg'}">${net>=0?'+':''}${net}</td>
+    `;
+    body.appendChild(tr);
+  }
+
+  document.getElementById('trackerTitle').textContent =
+    selectedRange === 7 ? '📊 WEEKLY MISSION TRACKER' :
+    selectedRange === 30 ? '📊 30-DAY MISSION TRACKER' : '📊 3-MONTH MISSION TRACKER';
+
+  const totalEl = document.getElementById('periodTotal');
+  totalEl.innerHTML = 'Period Total: <b class="' + (periodTotal>=0?'net-pos':'net-neg') + '">' +
+    (periodTotal>=0?'+':'') + periodTotal + ' RR</b>';
+}
+
+document.querySelectorAll('.range-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    selectedRange = parseInt(btn.dataset.range,10);
+    document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTracker();
+  });
+});
+
+// ---- TIMER LOGIC ----
+function formatTime(s){
+  const m = Math.floor(s/60).toString().padStart(2,'0');
+  const sec = (s%60).toString().padStart(2,'0');
+  return m+':'+sec;
+}
+function updateTimerDisplay(){
+  document.getElementById('timerDisplay').textContent = formatTime(timer.remaining);
+}
+function startTimer(){
+  if(timer.running) return;
+  timer.running = true;
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('pauseBtn').disabled = false;
+  document.getElementById('timerStatus').textContent = 'ROUND IN PROGRESS';
+  timer.interval = setInterval(()=>{
+    timer.remaining--;
+    updateTimerDisplay();
+    if(timer.remaining<=0){
+      clearInterval(timer.interval);
+      timer.running = false;
+      document.getElementById('timerStatus').textContent = 'ROUND WON';
+      const streakBonus = state.streakDays >= 3;
+      const rr = streakBonus ? 15 : 10;
+      addRR(rr, 'focus', 'Focus Block' + (streakBonus ? ' (Streak Bonus)' : ''));
+      showToast('FOCUS BLOCK COMPLETE · +' + rr + ' RR' + (streakBonus ? ' (STREAK BONUS)' : ''));
+      resetTimer(true);
+    }
+  },1000);
+}
+function pauseTimer(){
+  if(!timer.running) return;
+  clearInterval(timer.interval);
+  timer.running = false;
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('pauseBtn').disabled = true;
+  document.getElementById('timerStatus').textContent = 'PAUSED';
+}
+function resetTimer(silent){
+  clearInterval(timer.interval);
+  timer.running = false;
+  timer.remaining = 25*60;
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('pauseBtn').disabled = true;
+  document.getElementById('timerStatus').textContent = silent ? 'STANDBY' : 'RESET — TIMER CLEARED';
+  updateTimerDisplay();
+}
+
+document.getElementById('startBtn').onclick = startTimer;
+document.getElementById('pauseBtn').onclick = pauseTimer;
+document.getElementById('resetBtn').onclick = ()=>resetTimer(false);
+document.getElementById('afkBtn').onclick = ()=>{
+  addRR(-10,'penalty','Distraction Drift (AFK)');
+  resetTimer(false);
+  showToast('DISTRACTION DRIFT · -10 RR · TIMER RESET');
+};
+document.getElementById('manualFocusBtn').onclick = ()=>{
+  const streakBonus = state.streakDays >= 3;
+  const rr = streakBonus ? 15 : 10;
+  addRR(rr, 'focus', 'Focus Block (Manual Log)' + (streakBonus ? ' (Streak Bonus)' : ''));
+  showToast('PAST FOCUS BLOCK LOGGED · +' + rr + ' RR' + (streakBonus ? ' (STREAK BONUS)' : ''));
+};
+document.getElementById('playerName').addEventListener('change', e=>{
+  state.playerName = e.target.value;
+  saveState();
+});
+document.getElementById('resetAll').onclick = async ()=>{
+  if(!confirm('Reset all saved progress? This cannot be undone.')) return;
+  state = {playerName:'', lifetimeRR:0, spendableRR:0, monitorFund:0, todayFocusCount:0, streakDays:0, log:{}, transactions:[]};
+  await saveState();
+  render();
+};
+
+loadState();
+updateTimerDisplay();
+</script>
+</body>
+</html>
